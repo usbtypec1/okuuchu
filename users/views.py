@@ -1,10 +1,12 @@
 from uuid import uuid4
 
+from django.db import IntegrityError
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import serializers
 
+from users.exceptions import UserAlreadyExistsError
 from users.models import User
 
 
@@ -32,6 +34,9 @@ class UserCreateApi(APIView):
             is_active=True,
         )
         user.set_password(password)
-        user.save()
+        try:
+            user.save()
+        except IntegrityError:
+            raise UserAlreadyExistsError
         serializer = self.OutputSerializer(user)
         return Response(serializer.data)
